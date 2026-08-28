@@ -1,5 +1,12 @@
-import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Pressable,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import NetInfo, { type NetInfoState } from '@react-native-community/netinfo';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +20,11 @@ import {
   syncActiveStopZoneWithRoute,
 } from '@/features/location/activeStopLocation';
 import {
+  getDeviceLocationPermissionStatus,
+  subscribeDeviceLocationPermission,
+  type LocationPermissionStatus,
+} from '@/features/location/initDeviceLocation';
+import {
   simulateConfirmingFix,
   simulateDepartSequence,
   simulateInsideFix,
@@ -20,6 +32,7 @@ import {
   simulateOutsideFix,
   simulateReturnInsideSequence,
 } from '@/features/location/devLocationSimulator';
+import { useOutboxStore } from '@/features/outbox/store/outboxStore';
 import { useActiveStopZoneStore } from '@/features/route/store/activeStopZoneStore';
 import { useRouteProgressStore } from '@/features/route/store/routeProgressStore';
 import { ROUTE_FIXTURE } from '@/mock/fixtures';
@@ -37,6 +50,23 @@ const stopStatusStyles: Record<StopStatus, object> = {
   ACTIVE: styles.stopStatus_ACTIVE,
   COMPLETED: styles.stopStatus_COMPLETED,
 };
+
+function formatPermissionStatus(status: LocationPermissionStatus): string {
+  switch (status) {
+    case 'checking':
+      return 'Checking location permission…';
+    case 'granted':
+      return 'Location permission granted';
+    case 'denied':
+      return 'Location permission denied — enable in Settings to use GPS';
+    case 'unavailable':
+      return 'Device location unavailable on this platform';
+  }
+}
+
+function readIsOnline(state: NetInfoState): boolean {
+  return state.isConnected === true && state.isInternetReachable !== false;
+}
 
 function formatCoordinate(
   coordinate: {
@@ -77,6 +107,25 @@ function useDepartureElapsed(departedAt: string | null): string {
   return formatElapsedDuration(getElapsedSecondsSince(departedAt, nowMs));
 }
 
+function DevSimulatorButton({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      activeOpacity={0.7}
+      style={styles.devButton}
+      onPress={onPress}
+    >
+      <Text style={styles.devButtonText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 function StopRow({
   stop,
   activeStopId,
@@ -115,6 +164,29 @@ export function RouteScreen() {
   const zoneHasHydrated = useActiveStopZoneStore(state => state.hasHydrated);
   const zone = useActiveStopZoneStore(state => state.zone);
   const [arriveError, setArriveError] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState<boolean | null>(null);
+  const [permissionStatus, setPermissionStatus] =
+    useState<LocationPermissionStatus>(getDeviceLocationPermissionStatus());
+  const outboxDeliveries = useOutboxStore(state => state.deliveries);
+  const unsyncedCount = useMemo(
+    () =>
+      outboxDeliveries.filter(delivery => delivery.state !== 'SYNCED').length,
+    [outboxDeliveries],
+  );
+
+  useEffect(() => {
+    void NetInfo.fetch().then(state => {
+      setIsOnline(readIsOnline(state));
+    });
+
+    return NetInfo.addEventListener(state => {
+      setIsOnline(readIsOnline(state));
+    });
+  }, []);
+
+  useEffect(() => {
+    return subscribeDeviceLocationPermission(setPermissionStatus);
+  }, []);
 
   const activeStop = findActiveStop(routeStops, activeStopId);
   const departureElapsed = useDepartureElapsed(zone?.departedAt ?? null);
@@ -144,6 +216,16 @@ export function RouteScreen() {
         Active stop: {activeStop?.customerName ?? 'None'}
       </Text>
 
+      <View style={styles.statusPanel}>
+        <Text style={styles.statusLine}>
+          Connectivity:{' '}
+          {isOnline === null ? 'Checking…' : isOnline ? 'Online' : 'Offline'}
+        </Text>
+        <Text style={styles.statusLine}>
+          Unsynced deliveries: {unsyncedCount}
+        </Text>
+      </View>
+
       {zone?.zoneState === 'DEPARTED_EARLY' ? (
         <View style={styles.warningBanner}>
           <Text style={styles.warningBannerTitle}>Departed early</Text>
@@ -156,6 +238,9 @@ export function RouteScreen() {
       {activeStop ? (
         <View style={styles.zonePanel}>
           <Text style={styles.zonePanelTitle}>Active stop geofence</Text>
+          <Text style={styles.zonePanelLine}>
+            GPS: {formatPermissionStatus(permissionStatus)}
+          </Text>
           <Text style={styles.zonePanelLine}>
             Zone state: {zone?.zoneState ?? 'OUTSIDE'}
           </Text>
@@ -243,88 +328,38 @@ export function RouteScreen() {
 
       {activeStop ? (
         <View style={styles.devPanel}>
-          <Text style={styles.devPanelTitle}>Dev location simulator</Text>
+          <Text style={styles.devPanelTitle}>
+            Dev / debug: location simulator
+          </Text>
           <Text style={styles.devPanelHint}>
-            Feeds the same fix-processing path as future GPS.
+            Development-only controls for driving geofence transitions without
+            travelling to stop coordinates.
           </Text>
 
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.button,
-              styles.buttonSecondary,
-              pressed && styles.buttonPressed,
-            ]}
+          <DevSimulatorButton
+            label="Inject inside"
             onPress={() => simulateInsideFix()}
-          >
-            <Text style={styles.buttonSecondaryText}>Inject inside</Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.button,
-              styles.buttonSecondary,
-              pressed && styles.buttonPressed,
-            ]}
+          />
+          <DevSimulatorButton
+            label="Inject outside"
             onPress={() => simulateOutsideFix()}
-          >
-            <Text style={styles.buttonSecondaryText}>Inject outside</Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.button,
-              styles.buttonSecondary,
-              pressed && styles.buttonPressed,
-            ]}
+          />
+          <DevSimulatorButton
+            label="Inject confirming fix"
             onPress={() => simulateConfirmingFix()}
-          >
-            <Text style={styles.buttonSecondaryText}>
-              Inject confirming fix
-            </Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.button,
-              styles.buttonSecondary,
-              pressed && styles.buttonPressed,
-            ]}
+          />
+          <DevSimulatorButton
+            label="Inject jitter (<10m)"
             onPress={() => simulateJitterFix()}
-          >
-            <Text style={styles.buttonSecondaryText}>
-              Inject jitter (&lt;10m)
-            </Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.button,
-              styles.buttonSecondary,
-              pressed && styles.buttonPressed,
-            ]}
+          />
+          <DevSimulatorButton
+            label="Simulate depart"
             onPress={() => simulateDepartSequence()}
-          >
-            <Text style={styles.buttonSecondaryText}>Simulate depart</Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.button,
-              styles.buttonSecondary,
-              pressed && styles.buttonPressed,
-            ]}
+          />
+          <DevSimulatorButton
+            label="Simulate return inside"
             onPress={() => simulateReturnInsideSequence()}
-          >
-            <Text style={styles.buttonSecondaryText}>
-              Simulate return inside
-            </Text>
-          </Pressable>
+          />
         </View>
       ) : null}
     </ScrollView>

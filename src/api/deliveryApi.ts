@@ -32,6 +32,29 @@ function readErrorMessage(value: unknown, fallback: string): string {
   return typeof message === 'string' ? message : fallback;
 }
 
+function isSuccessStatus(status: number): boolean {
+  return status >= 200 && status < 300;
+}
+
+function resolve409Result(data: unknown): PostDeliveryResult {
+  const deliveryId = readDeliveryId(data);
+
+  if (deliveryId) {
+    return {
+      outcome: 'synced',
+      deliveryId,
+      duplicate: true,
+    };
+  }
+
+  return {
+    outcome: 'failed',
+    message: readErrorMessage(data, 'Delivery already accepted'),
+    status: 409,
+    retryable: false,
+  };
+}
+
 export async function postRouteDelivery(
   routeId: string,
   submission: PodSubmission,
@@ -47,6 +70,23 @@ export async function postRouteDelivery(
         },
       },
     );
+
+    if (response.status === 409) {
+      return resolve409Result(response.data);
+    }
+
+    if (!isSuccessStatus(response.status)) {
+      return {
+        outcome: 'failed',
+        message: readErrorMessage(
+          response.data,
+          `Request failed with status ${response.status}`,
+        ),
+        status: response.status,
+        retryable:
+          classifyDeliveryFailureStatus(response.status) === 'retryable',
+      };
+    }
 
     const deliveryId = readDeliveryId(response.data);
 
@@ -67,25 +107,7 @@ export async function postRouteDelivery(
     };
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 409) {
-      const deliveryId = readDeliveryId(error.response.data);
-
-      if (deliveryId) {
-        return {
-          outcome: 'synced',
-          deliveryId,
-          duplicate: true,
-        };
-      }
-
-      return {
-        outcome: 'failed',
-        message: readErrorMessage(
-          error.response.data,
-          'Delivery already accepted',
-        ),
-        status: 409,
-        retryable: false,
-      };
+      return resolve409Result(error.response.data);
     }
 
     if (axios.isAxiosError(error) && error.response) {

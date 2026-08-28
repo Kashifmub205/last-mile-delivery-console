@@ -15,8 +15,32 @@ export type SyncPassResult =
 let passInProgress = false;
 let pendingPassRequested = false;
 
+const passInProgressListeners = new Set<(inProgress: boolean) => void>();
+
+function setPassInProgress(next: boolean): void {
+  if (passInProgress === next) {
+    return;
+  }
+
+  passInProgress = next;
+
+  for (const listener of passInProgressListeners) {
+    listener(passInProgress);
+  }
+}
+
 export function isSyncPassInProgress(): boolean {
   return passInProgress;
+}
+
+export function subscribeSyncPassInProgress(
+  listener: (inProgress: boolean) => void,
+): () => void {
+  passInProgressListeners.add(listener);
+
+  return () => {
+    passInProgressListeners.delete(listener);
+  };
 }
 
 export async function requestSyncPass(): Promise<SyncPassResult> {
@@ -33,7 +57,7 @@ export async function requestSyncPass(): Promise<SyncPassResult> {
 }
 
 async function runSyncPass(): Promise<SyncPassResult> {
-  passInProgress = true;
+  setPassInProgress(true);
 
   let syncedCount = 0;
   let attemptedCount = 0;
@@ -65,7 +89,7 @@ async function runSyncPass(): Promise<SyncPassResult> {
       attemptedCount,
     };
   } finally {
-    passInProgress = false;
+    setPassInProgress(false);
 
     if (pendingPassRequested) {
       pendingPassRequested = false;

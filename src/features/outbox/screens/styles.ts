@@ -19,11 +19,17 @@ export const styles = StyleSheet.create({
     marginTop: spacing.xxl,
     gap: spacing.md,
   },
-  mockControls: {
-    marginTop: spacing.lg,
+  devPanel: {
+    marginTop: spacing.xxl,
     gap: spacing.sm,
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSoft,
   },
-  mockControlsTitle: typography.section,
+  devPanelTitle: {
+    ...typography.section,
+  },
+  devPanelHint: typography.caption,
   button: {
     borderRadius: radii.md,
     paddingVertical: spacing.md,

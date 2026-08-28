@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import {
   listOutboxDeliveries,
@@ -8,8 +8,8 @@ import { useOutboxStore } from '@/features/outbox/store/outboxStore';
 import {
   isSyncPassInProgress,
   requestSyncPass,
+  subscribeSyncPassInProgress,
 } from '@/features/outbox/sync/syncCoordinator';
-import { ROUTE_FIXTURE } from '@/mock/fixtures';
 import {
   getMockDeliveryControls,
   setMockDeliveryControls,
@@ -36,11 +36,12 @@ const MOCK_MODE_LABELS: Record<MockDeliveryControlMode, string> = {
 };
 
 export function OutboxScreen() {
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [passInProgress, setPassInProgress] = useState(isSyncPassInProgress);
   const [mockMode, setMockMode] = useState(getMockDeliveryControls().mode);
+
+  useEffect(() => subscribeSyncPassInProgress(setPassInProgress), []);
   const hasHydrated = useOutboxStore(state => state.hasHydrated);
   const deliveries = useOutboxStore(state => state.deliveries);
-  const enqueueDelivery = useOutboxStore(state => state.enqueueDelivery);
   const retryFailedDelivery = useOutboxStore(
     state => state.retryFailedDelivery,
   );
@@ -53,29 +54,8 @@ export function OutboxScreen() {
     [deliveries],
   );
 
-  const handleEnqueueTestDelivery = () => {
-    const stop = ROUTE_FIXTURE.stops[0];
-
-    if (!stop) {
-      return;
-    }
-
-    enqueueDelivery({
-      routeId: ROUTE_FIXTURE.routeId,
-      stopId: stop.id,
-      templateId: stop.templateId,
-      completedAt: new Date().toISOString(),
-      location: stop.dropZone[0] ?? { latitude: 0, longitude: 0 },
-      response: [{ fieldId: 'dev-test', value: 'queued locally' }],
-    });
-  };
-
   const handleSyncNext = () => {
-    setIsSyncing(true);
-
-    void requestSyncPass().finally(() => {
-      setIsSyncing(false);
-    });
+    void requestSyncPass();
   };
 
   const handleSetMockMode = (mode: MockDeliveryControlMode) => {
@@ -106,50 +86,33 @@ export function OutboxScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Outbox</Text>
       <Text style={styles.subtitle}>
-        Manual sync with retry rules. Mock mode: {MOCK_MODE_LABELS[mockMode]}.
+        Manual sync with retry rules. Deliveries sync automatically when online.
       </Text>
 
       <View style={styles.actions}>
         <Pressable
           accessibilityRole="button"
-          disabled={
-            !hasHydrated ||
-            isSyncing ||
-            isSyncPassInProgress() ||
-            !hasEligibleDelivery
-          }
+          disabled={!hasHydrated || passInProgress || !hasEligibleDelivery}
           onPress={handleSyncNext}
           style={({ pressed }) => [
             styles.button,
             styles.buttonPrimary,
-            (!hasHydrated ||
-              isSyncing ||
-              isSyncPassInProgress() ||
-              !hasEligibleDelivery) &&
+            (!hasHydrated || passInProgress || !hasEligibleDelivery) &&
               styles.buttonDisabled,
             pressed && styles.buttonPressed,
           ]}
         >
           <Text style={styles.buttonPrimaryText}>
-            {isSyncing || isSyncPassInProgress() ? 'Syncing…' : 'Sync now'}
+            {passInProgress ? 'Syncing…' : 'Sync now'}
           </Text>
-        </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          onPress={handleEnqueueTestDelivery}
-          style={({ pressed }) => [
-            styles.button,
-            styles.buttonSecondary,
-            pressed && styles.buttonPressed,
-          ]}
-        >
-          <Text style={styles.buttonSecondaryText}>Enqueue test delivery</Text>
         </Pressable>
       </View>
 
-      <View style={styles.mockControls}>
-        <Text style={styles.mockControlsTitle}>Mock failure mode</Text>
+      <View style={styles.devPanel}>
+        <Text style={styles.devPanelTitle}>Dev / debug: mock failure mode</Text>
+        <Text style={styles.devPanelHint}>
+          Deterministic server failures for retry testing only.
+        </Text>
         {(Object.keys(MOCK_MODE_LABELS) as MockDeliveryControlMode[]).map(
           mode => (
             <Pressable
