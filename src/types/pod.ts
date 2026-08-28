@@ -18,7 +18,15 @@ export type PodFieldBase = {
 };
 
 export type TextPodField = PodFieldBase & {
-  type: 'TEXT' | 'TEXTAREA' | 'DATETIME';
+  type: 'TEXT';
+};
+
+export type TextareaPodField = PodFieldBase & {
+  type: 'TEXTAREA';
+};
+
+export type DatetimePodField = PodFieldBase & {
+  type: 'DATETIME';
 };
 
 export type DropdownPodField = PodFieldBase & {
@@ -31,7 +39,18 @@ export type CheckboxPodField = PodFieldBase & {
   options: string[];
 };
 
-export type PodField = TextPodField | DropdownPodField | CheckboxPodField;
+export type UnsupportedPodField = PodFieldBase & {
+  type: 'UNSUPPORTED';
+  originalType: string;
+};
+
+export type PodField =
+  | TextPodField
+  | TextareaPodField
+  | DatetimePodField
+  | DropdownPodField
+  | CheckboxPodField
+  | UnsupportedPodField;
 
 export type PodTemplate = {
   templateId: string;

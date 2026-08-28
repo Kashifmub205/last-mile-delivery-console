@@ -1,0 +1,31 @@
+{
+  "templateId": "tpl-commercial",
+  "name": "Commercial delivery",
+  "fields": [
+    {
+      "id": "signatory_name",
+      "type": "TEXT",
+      "label": "Signatory name",
+      "isRequired": true
+    },
+    {
+      "id": "handover_time",
+      "type": "DATETIME",
+      "label": "Handover time",
+      "isRequired": true
+    },
+    {
+      "id": "delivery_notes",
+      "type": "TEXTAREA",
+      "label": "Delivery notes",
+      "isRequired": false
+    },
+    {
+      "id": "handover_location",
+      "type": "DROPDOWN",
+      "label": "Handover location",
+      "isRequired": true,
+      "options": ["Loading bay", "Reception", "Mail room"]
+    }
+  ]
+}

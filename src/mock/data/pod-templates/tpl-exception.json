@@ -1,0 +1,37 @@
+{
+  "templateId": "tpl-exception",
+  "name": "Exception delivery",
+  "fields": [
+    {
+      "id": "exception_reason",
+      "type": "DROPDOWN",
+      "label": "Exception reason",
+      "isRequired": true,
+      "options": [
+        "Customer unavailable",
+        "Address issue",
+        "Access blocked",
+        "Refused"
+      ]
+    },
+    {
+      "id": "exception_notes",
+      "type": "TEXTAREA",
+      "label": "Exception notes",
+      "isRequired": true
+    },
+    {
+      "id": "follow_up_required",
+      "type": "CHECKBOX",
+      "label": "Follow-up required",
+      "isRequired": false,
+      "options": ["Yes"]
+    },
+    {
+      "id": "signature",
+      "type": "SIGNATURE",
+      "label": "Signature",
+      "isRequired": true
+    }
+  ]
+}

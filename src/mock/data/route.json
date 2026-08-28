@@ -1,0 +1,67 @@
+{
+  "routeId": "route-morning-01",
+  "stops": [
+    {
+      "id": "stop-002",
+      "sequence": 2,
+      "customerName": "Al-Rehman Traders",
+      "address": "Office 4-B, Block H, Blue Area, Jinnah Avenue, Islamabad",
+      "parcelCount": 1,
+      "windowEnd": "2026-08-28T05:00:00.000Z",
+      "templateId": "tpl-commercial",
+      "dropZone": [
+        { "latitude": 33.7085, "longitude": 73.0552 },
+        { "latitude": 33.70875, "longitude": 73.0552 },
+        { "latitude": 33.70875, "longitude": 73.05545 },
+        { "latitude": 33.7085, "longitude": 73.05545 }
+      ]
+    },
+    {
+      "id": "stop-001",
+      "sequence": 1,
+      "customerName": "Fatima Khan",
+      "address": "Shop 18, Jinnah Super Market, F-7 Markaz, Islamabad",
+      "parcelCount": 2,
+      "windowEnd": "2026-08-28T04:30:00.000Z",
+      "templateId": "tpl-residential",
+      "dropZone": [
+        { "latitude": 33.7208, "longitude": 73.065 },
+        { "latitude": 33.72105, "longitude": 73.065 },
+        { "latitude": 33.72105, "longitude": 73.06525 },
+        { "latitude": 33.7208, "longitude": 73.06525 }
+      ]
+    },
+    {
+      "id": "stop-004",
+      "sequence": 4,
+      "customerName": "Khurram Pharmacy",
+      "address": "Plot 92, G-9 Markaz, Islamabad",
+      "parcelCount": 1,
+      "windowEnd": "2026-08-28T06:00:00.000Z",
+      "templateId": "tpl-exception",
+      "dropZone": [
+        { "latitude": 33.6845, "longitude": 73.036 },
+        { "latitude": 33.68475, "longitude": 73.036 },
+        { "latitude": 33.68475, "longitude": 73.03625 },
+        { "latitude": 33.6845, "longitude": 73.03625 }
+      ]
+    },
+    {
+      "id": "stop-003",
+      "sequence": 3,
+      "customerName": "Sana Ahmed",
+      "address": "House 26, Street 14, F-10/2, Islamabad",
+      "parcelCount": 3,
+      "windowEnd": "2026-08-28T05:30:00.000Z",
+      "templateId": "tpl-residential",
+      "dropZone": [
+        { "latitude": 33.6925, "longitude": 73.0148 },
+        { "latitude": 33.6928, "longitude": 73.0148 },
+        { "latitude": 33.6928, "longitude": 73.0151 },
+        { "latitude": 33.69265, "longitude": 73.0151 },
+        { "latitude": 33.69265, "longitude": 73.0154 },
+        { "latitude": 33.6925, "longitude": 73.0154 }
+      ]
+    }
+  ]
+}

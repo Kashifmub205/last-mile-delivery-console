@@ -1,6 +1,6 @@
 import type { Coordinate } from './location';
 
-export type StopStatus = 'pending' | 'active' | 'completed' | 'failed';
+export type StopStatus = 'PENDING' | 'ACTIVE' | 'COMPLETED';
 
 export type RouteStop = {
   id: string;

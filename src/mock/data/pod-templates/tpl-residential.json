@@ -1,0 +1,42 @@
+{
+  "templateId": "tpl-residential",
+  "name": "Residential delivery",
+  "fields": [
+    {
+      "id": "recipient_name",
+      "type": "TEXT",
+      "label": "Recipient name",
+      "isRequired": true
+    },
+    {
+      "id": "handed_to",
+      "type": "DROPDOWN",
+      "label": "Handed to",
+      "isRequired": true,
+      "options": ["Customer", "Neighbor", "Safe place"]
+    },
+    {
+      "id": "safe_place_location",
+      "type": "TEXT",
+      "label": "Safe place location",
+      "isRequired": true,
+      "visibleWhen": {
+        "fieldId": "handed_to",
+        "equals": "Safe place"
+      }
+    },
+    {
+      "id": "delivery_notes",
+      "type": "TEXTAREA",
+      "label": "Delivery notes",
+      "isRequired": false
+    },
+    {
+      "id": "photo_not_required_ack",
+      "type": "CHECKBOX",
+      "label": "I confirm the parcel is visible and secure",
+      "isRequired": true,
+      "options": ["Confirmed"]
+    }
+  ]
+}
