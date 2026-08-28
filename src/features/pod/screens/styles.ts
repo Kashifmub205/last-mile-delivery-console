@@ -11,9 +11,18 @@ export const styles = StyleSheet.create({
     ...typography.title,
     marginBottom: spacing.sm,
   },
-  subtitle: typography.bodySecondary,
+  subtitle: {
+    ...typography.bodySecondary,
+    marginBottom: spacing.lg,
+  },
+  scrollContent: {
+    paddingBottom: spacing.xxl,
+  },
+  form: {
+    marginTop: spacing.md,
+  },
   actions: {
-    marginTop: spacing.xxl,
+    marginTop: spacing.lg,
     gap: spacing.md,
   },
   button: {

@@ -5,13 +5,14 @@ import {
   initOutboxSync,
   teardownOutboxSync,
 } from '@/features/outbox/sync/initOutboxSync';
-import { bootstrapRouteProgress } from '@/features/route/store/routeProgressStore';
-import { ROUTE_FIXTURE } from '@/mock/fixtures';
+import { bootstrapAppState } from '@/features/route/bootstrap/bootstrapAppState';
 
 export function AppProviders({ children }: { children: ReactNode }) {
   useEffect(() => {
-    void bootstrapRouteProgress(ROUTE_FIXTURE.stops);
-    void initOutboxSync();
+    void (async () => {
+      await bootstrapAppState();
+      await initOutboxSync();
+    })();
 
     return () => {
       teardownOutboxSync();

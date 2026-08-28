@@ -1,6 +1,16 @@
 export { distanceBetweenCoordinates } from './distance';
 export { isCoordinateInsidePolygon } from './pointInPolygon';
 export {
+  getConfirmingInsideCoordinate,
+  getConfirmingOutsideCoordinate,
+  getConfirmingOffsetCoordinate,
+  getJitterCoordinate,
+  getPolygonCentroid,
+  getRepresentativeInsideCoordinate,
+  getRepresentativeOutsideCoordinate,
+  offsetCoordinateMeters,
+} from './polygonCoordinates';
+export {
   processLocationFixForPolygon,
   shouldEvaluateZoneForFix,
 } from './locationFixProcessing';
@@ -26,3 +36,13 @@ export type {
   ArriveResult,
   ZoneMachineState,
 } from './zoneStateMachine';
+export {
+  formatElapsedDuration,
+  getElapsedSecondsSince,
+  processActiveStopLocationFix,
+  resolveActiveStopZone,
+} from './zoneOrchestration';
+export type {
+  IgnoredStopReason,
+  ProcessActiveStopFixResult,
+} from './zoneOrchestration';

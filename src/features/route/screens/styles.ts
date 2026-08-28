@@ -12,6 +12,52 @@ export const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   subtitle: typography.bodySecondary,
+  scrollContent: {
+    paddingBottom: spacing.xxl,
+  },
+  warningBanner: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.warningSoft,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.warning,
+    padding: spacing.md,
+  },
+  warningBannerTitle: {
+    ...typography.body,
+    fontWeight: '600',
+    color: colors.warning,
+    marginBottom: spacing.sm,
+  },
+  warningBannerBody: typography.bodySecondary,
+  zonePanel: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  zonePanelTitle: {
+    ...typography.section,
+  },
+  zonePanelLine: typography.bodySecondary,
+  errorText: {
+    ...typography.caption,
+    color: colors.error,
+  },
+  devPanel: {
+    marginTop: spacing.xxl,
+    gap: spacing.md,
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSoft,
+  },
+  devPanelTitle: {
+    ...typography.section,
+  },
+  devPanelHint: typography.caption,
   stopList: {
     marginTop: spacing.xxl,
     gap: spacing.md,

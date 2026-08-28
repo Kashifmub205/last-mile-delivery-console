@@ -30,6 +30,24 @@ export function createOutboxDelivery(
   };
 }
 
+export function findDeliveryForStop(
+  deliveries: OutboxDelivery[],
+  routeId: string,
+  stopId: string,
+): OutboxDelivery | undefined {
+  return deliveries.find(
+    delivery => delivery.routeId === routeId && delivery.stopId === stopId,
+  );
+}
+
+export function hasLocalDeliveryForStop(
+  deliveries: OutboxDelivery[],
+  routeId: string,
+  stopId: string,
+): boolean {
+  return findDeliveryForStop(deliveries, routeId, stopId) !== undefined;
+}
+
 export function listOutboxDeliveries(
   deliveries: OutboxDelivery[],
 ): OutboxDelivery[] {

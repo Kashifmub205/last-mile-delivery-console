@@ -1,4 +1,3 @@
-import { bootstrapOutbox } from '@/features/outbox/store/outboxStore';
 import { initAppStateSync, teardownAppStateSync } from './appStateSync';
 import { initConnectivity, teardownConnectivity } from './connectivity';
 import { initPeriodicSync, teardownPeriodicSync } from './periodicSync';
@@ -16,8 +15,6 @@ export async function initOutboxSync(): Promise<void> {
   }
 
   started = true;
-
-  await bootstrapOutbox();
 
   const online = await initConnectivity(requestSyncPassIfOnline);
   initAppStateSync(requestSyncPassIfOnline);
