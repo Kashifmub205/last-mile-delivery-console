@@ -19,10 +19,12 @@ export type PodFieldBase = {
 
 export type TextPodField = PodFieldBase & {
   type: 'TEXT';
+  maxLength?: number;
 };
 
 export type TextareaPodField = PodFieldBase & {
   type: 'TEXTAREA';
+  maxLength?: number;
 };
 
 export type DatetimePodField = PodFieldBase & {

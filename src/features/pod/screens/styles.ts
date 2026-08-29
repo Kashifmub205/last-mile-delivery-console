@@ -7,6 +7,9 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.background,
     paddingHorizontal: spacing.lg,
   },
+  scroll: {
+    flex: 1,
+  },
   title: {
     ...typography.title,
     marginBottom: spacing.sm,
@@ -15,6 +18,7 @@ export const styles = StyleSheet.create({
     ...typography.bodySecondary,
   },
   scrollContent: {
+    flexGrow: 1,
     paddingBottom: spacing.xxl,
   },
   form: {

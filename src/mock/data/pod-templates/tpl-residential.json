@@ -29,7 +29,8 @@
       "id": "delivery_notes",
       "type": "TEXTAREA",
       "label": "Delivery notes",
-      "isRequired": false
+      "isRequired": false,
+      "maxLength": 500
     },
     {
       "id": "photo_not_required_ack",

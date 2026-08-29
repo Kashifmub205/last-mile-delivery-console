@@ -213,3 +213,129 @@ describe('pod form sanitization', () => {
     expect(sanitizePodAnswersFromFields(template.fields, answers)).toEqual([]);
   });
 });
+
+describe('pod field maxLength', () => {
+  function parseSingleField(field: Record<string, unknown>): PodField {
+    const parsed = parsePodTemplate({
+      templateId: 'tpl-max-length',
+      name: 'Max length',
+      fields: [field],
+    });
+
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) {
+      throw new Error(parsed.error);
+    }
+
+    const parsedField = parsed.value.fields[0];
+    if (!parsedField) {
+      throw new Error('Expected a parsed field');
+    }
+
+    return parsedField;
+  }
+
+  it('preserves a valid positive maxLength on TEXT and TEXTAREA fields', () => {
+    expect(
+      parseSingleField({
+        id: 'notes',
+        type: 'TEXTAREA',
+        label: 'Notes',
+        isRequired: false,
+        maxLength: 500,
+      }),
+    ).toEqual({
+      id: 'notes',
+      type: 'TEXTAREA',
+      label: 'Notes',
+      isRequired: false,
+      maxLength: 500,
+    });
+
+    expect(
+      parseSingleField({
+        id: 'name',
+        type: 'TEXT',
+        label: 'Name',
+        isRequired: false,
+        maxLength: 40,
+      }),
+    ).toEqual({
+      id: 'name',
+      type: 'TEXT',
+      label: 'Name',
+      isRequired: false,
+      maxLength: 40,
+    });
+  });
+
+  it('ignores malformed maxLength values instead of failing the field', () => {
+    const malformedValues = [
+      0,
+      -1,
+      1.5,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+      '500',
+      null,
+      {},
+      [],
+      true,
+    ];
+
+    for (const maxLength of malformedValues) {
+      const field = parseSingleField({
+        id: 'notes',
+        type: 'TEXTAREA',
+        label: 'Notes',
+        isRequired: false,
+        maxLength,
+      });
+
+      expect(field).toEqual({
+        id: 'notes',
+        type: 'TEXTAREA',
+        label: 'Notes',
+        isRequired: false,
+      });
+      expect(field).not.toHaveProperty('maxLength');
+    }
+  });
+
+  it('omits maxLength when the template does not define one', () => {
+    const field = parseSingleField({
+      id: 'notes',
+      type: 'TEXTAREA',
+      label: 'Notes',
+      isRequired: false,
+    });
+
+    expect(field).toEqual({
+      id: 'notes',
+      type: 'TEXTAREA',
+      label: 'Notes',
+      isRequired: false,
+    });
+    expect(field).not.toHaveProperty('maxLength');
+  });
+
+  it('exposes maxLength 500 on Delivery Notes from the mock templates', () => {
+    expect(residentialField('delivery_notes')).toEqual(
+      expect.objectContaining({
+        type: 'TEXTAREA',
+        maxLength: 500,
+      }),
+    );
+    expect(
+      POD_TEMPLATE_FIXTURES.commercial.fields.find(
+        field => field.id === 'delivery_notes',
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        type: 'TEXTAREA',
+        maxLength: 500,
+      }),
+    );
+  });
+});

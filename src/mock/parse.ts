@@ -40,7 +40,9 @@ function readStringArray(value: unknown): string[] | null {
     return null;
   }
 
-  const items = value.filter((item): item is string => typeof item === 'string');
+  const items = value.filter(
+    (item): item is string => typeof item === 'string',
+  );
   return items.length === value.length ? items : null;
 }
 
@@ -93,6 +95,14 @@ function parseVisibleWhen(
   return { fieldId, equals };
 }
 
+function parseMaxLength(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1) {
+    return undefined;
+  }
+
+  return value;
+}
+
 function toUnsupportedField(
   base: {
     id: string;
@@ -124,7 +134,12 @@ function parsePodField(value: unknown): PodField | null {
   }
 
   const visibleWhen = parseVisibleWhen(value.visibleWhen);
-  const base = { id, label, isRequired, ...(visibleWhen ? { visibleWhen } : {}) };
+  const base = {
+    id,
+    label,
+    isRequired,
+    ...(visibleWhen ? { visibleWhen } : {}),
+  };
 
   if (!SUPPORTED_POD_FIELD_TYPES.has(rawType)) {
     return toUnsupportedField(base, rawType);
@@ -141,12 +156,13 @@ function parsePodField(value: unknown): PodField | null {
       : { ...base, type: 'CHECKBOX', options };
   }
 
-  if (rawType === 'TEXT') {
-    return { ...base, type: 'TEXT' };
-  }
-
-  if (rawType === 'TEXTAREA') {
-    return { ...base, type: 'TEXTAREA' };
+  if (rawType === 'TEXT' || rawType === 'TEXTAREA') {
+    const maxLength = parseMaxLength(value.maxLength);
+    return {
+      ...base,
+      type: rawType,
+      ...(maxLength !== undefined ? { maxLength } : {}),
+    };
   }
 
   return { ...base, type: 'DATETIME' };

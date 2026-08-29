@@ -91,6 +91,10 @@ export const fieldStyles = StyleSheet.create({
     ...typography.body,
     flex: 1,
   },
+  characterCount: {
+    ...typography.caption,
+    alignSelf: 'flex-end',
+  },
   error: {
     ...typography.caption,
     color: colors.error,

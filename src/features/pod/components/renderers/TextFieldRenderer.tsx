@@ -1,4 +1,4 @@
-import { TextInput } from 'react-native';
+import { Text, TextInput } from 'react-native';
 
 import { FieldShell } from '../FieldShell';
 import { fieldStyles } from '../fieldStyles';
@@ -11,6 +11,7 @@ export function TextFieldRenderer({
   error,
 }: PodFieldRendererProps) {
   const textValue = typeof value === 'string' ? value : '';
+  const maxLength = field.type === 'TEXT' ? field.maxLength : undefined;
 
   return (
     <FieldShell label={field.label} isRequired={field.isRequired} error={error}>
@@ -19,8 +20,14 @@ export function TextFieldRenderer({
         style={[fieldStyles.input, error ? fieldStyles.inputError : null]}
         value={textValue}
         onChangeText={onChange}
+        maxLength={maxLength}
         autoCapitalize="words"
       />
+      {maxLength !== undefined ? (
+        <Text style={fieldStyles.characterCount}>
+          {textValue.length} / {maxLength}
+        </Text>
+      ) : null}
     </FieldShell>
   );
 }

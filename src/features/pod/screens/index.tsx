@@ -151,8 +151,10 @@ export function ProofOfDeliveryScreen({ route }: Props) {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         <Text style={styles.title}>{template.name}</Text>
         <Text style={styles.subtitle}>
