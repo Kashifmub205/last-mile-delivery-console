@@ -1,6 +1,9 @@
 import {
-  LOCAL_SAVE_FEEDBACK_BODY,
-  LOCAL_SAVE_FEEDBACK_TITLE,
+  LOCAL_SAVE_FEEDBACK_OFFLINE_BODY,
+  LOCAL_SAVE_FEEDBACK_OFFLINE_TITLE,
+  LOCAL_SAVE_FEEDBACK_ONLINE_BODY,
+  LOCAL_SAVE_FEEDBACK_ONLINE_TITLE,
+  getLocalSaveFeedbackCopy,
   shouldShowLocalSaveFeedback,
 } from '@/features/route/localSaveFeedback';
 
@@ -16,18 +19,42 @@ describe('localSaveFeedback', () => {
     );
   });
 
-  it('uses truthful wording that does not claim sync success', () => {
-    expect(LOCAL_SAVE_FEEDBACK_TITLE).toBe('Delivery saved locally');
-    expect(LOCAL_SAVE_FEEDBACK_BODY).toBe(
-      'It will sync automatically when a connection is available.',
+  it('uses online wording when connectivity is online', () => {
+    expect(getLocalSaveFeedbackCopy(true)).toEqual({
+      title: LOCAL_SAVE_FEEDBACK_ONLINE_TITLE,
+      body: LOCAL_SAVE_FEEDBACK_ONLINE_BODY,
+    });
+    expect(LOCAL_SAVE_FEEDBACK_ONLINE_TITLE).toBe('Delivery saved');
+    expect(LOCAL_SAVE_FEEDBACK_ONLINE_BODY).toBe(
+      'Syncing automatically in the background.',
     );
-    expect(LOCAL_SAVE_FEEDBACK_TITLE.toLowerCase()).not.toContain('synced');
-    expect(LOCAL_SAVE_FEEDBACK_BODY.toLowerCase()).not.toContain('synced');
-    expect(LOCAL_SAVE_FEEDBACK_TITLE.toLowerCase()).not.toContain(
-      'sent successfully',
+  });
+
+  it('uses local-first wording when offline', () => {
+    expect(getLocalSaveFeedbackCopy(false)).toEqual({
+      title: LOCAL_SAVE_FEEDBACK_OFFLINE_TITLE,
+      body: LOCAL_SAVE_FEEDBACK_OFFLINE_BODY,
+    });
+    expect(LOCAL_SAVE_FEEDBACK_OFFLINE_TITLE).toBe('Delivery saved locally');
+    expect(LOCAL_SAVE_FEEDBACK_OFFLINE_BODY).toBe(
+      "It will sync automatically when you're back online.",
     );
-    expect(LOCAL_SAVE_FEEDBACK_BODY.toLowerCase()).not.toContain(
-      'sent successfully',
-    );
+  });
+
+  it('uses local-first wording when connectivity is unknown', () => {
+    expect(getLocalSaveFeedbackCopy(null)).toEqual({
+      title: LOCAL_SAVE_FEEDBACK_OFFLINE_TITLE,
+      body: LOCAL_SAVE_FEEDBACK_OFFLINE_BODY,
+    });
+  });
+
+  it('never claims the delivery already synced', () => {
+    for (const isOnline of [true, false, null] as const) {
+      const { title, body } = getLocalSaveFeedbackCopy(isOnline);
+      expect(title.toLowerCase()).not.toContain('synced');
+      expect(body.toLowerCase()).not.toContain('synced');
+      expect(title.toLowerCase()).not.toContain('sent successfully');
+      expect(body.toLowerCase()).not.toContain('sent successfully');
+    }
   });
 });

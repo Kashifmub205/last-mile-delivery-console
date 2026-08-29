@@ -1,6 +1,6 @@
 # Last-Mile Delivery Console
 
-Offline-first React Native (CLI, 0.82.x, TypeScript) courier console. Android is the primary supported platform.
+Offline-first React Native (CLI, 0.82.x, TypeScript) courier console.
 
 **Route** — ordered stops, geofence-gated Arrive, early-departure banner, offline/unsynced indicators.  
 **Proof of Delivery** — registry-driven forms from mock templates; completion is local-first.  
@@ -163,7 +163,6 @@ Persisted across process death: route progress, outbox (including retry metadata
 - MMKV for synchronous recovery; Zustand for small shared state
 - Axios + mock adapter to keep a production-like API boundary without a backend
 - Dev mock/GPS controls exposed on purpose for deterministic review
-- Android-first scope
 
 ## Known limitations
 

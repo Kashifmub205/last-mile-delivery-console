@@ -37,9 +37,8 @@ import {
 } from '@/features/location/devLocationSimulator';
 import { useOutboxStore } from '@/features/outbox/store/outboxStore';
 import {
-  LOCAL_SAVE_FEEDBACK_BODY,
   LOCAL_SAVE_FEEDBACK_DISMISS_MS,
-  LOCAL_SAVE_FEEDBACK_TITLE,
+  getLocalSaveFeedbackCopy,
   shouldShowLocalSaveFeedback,
 } from '@/features/route/localSaveFeedback';
 import { useActiveStopZoneStore } from '@/features/route/store/activeStopZoneStore';
@@ -343,6 +342,8 @@ export function RouteScreen() {
     );
   }
 
+  const localSaveFeedback = getLocalSaveFeedbackCopy(isOnline);
+
   return (
     <ScrollView
       style={[styles.container, { paddingTop: insets.top }]}
@@ -386,7 +387,7 @@ export function RouteScreen() {
         <View style={styles.successBanner}>
           <View style={styles.successBannerHeader}>
             <Text style={styles.successBannerTitle}>
-              {LOCAL_SAVE_FEEDBACK_TITLE}
+              {localSaveFeedback.title}
             </Text>
             <Pressable
               accessibilityRole="button"
@@ -397,9 +398,7 @@ export function RouteScreen() {
               <Text style={styles.successBannerDismiss}>Dismiss</Text>
             </Pressable>
           </View>
-          <Text style={styles.successBannerBody}>
-            {LOCAL_SAVE_FEEDBACK_BODY}
-          </Text>
+          <Text style={styles.successBannerBody}>{localSaveFeedback.body}</Text>
         </View>
       ) : null}
 
