@@ -20,7 +20,7 @@ export function DatetimeFieldRenderer({
         style={[fieldStyles.input, error ? fieldStyles.inputError : null]}
         value={textValue}
         onChangeText={onChange}
-        placeholder="YYYY-MM-DDTHH:mm:ss"
+        placeholder="Enter date and time"
         placeholderTextColor={colors.textMuted}
         autoCapitalize="none"
         autoCorrect={false}

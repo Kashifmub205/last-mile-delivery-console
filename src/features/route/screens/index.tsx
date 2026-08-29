@@ -515,11 +515,9 @@ export function RouteScreen() {
           <Text style={styles.buttonPrimaryText}>Open Proof of Delivery</Text>
         </Pressable>
 
-        {!canOpenPod ? (
+        {!canOpenPod && !activeStop ? (
           <Text style={styles.helperText}>
-            {activeStop
-              ? 'Arrive at this stop to open proof of delivery.'
-              : 'No active stop — proof of delivery is unavailable.'}
+            No active stop — proof of delivery is unavailable.
           </Text>
         ) : null}
 

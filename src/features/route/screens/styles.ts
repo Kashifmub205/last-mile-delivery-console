@@ -77,7 +77,6 @@ export const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.warning,
-    borderLeftWidth: 4,
     padding: spacing.lg,
   },
   warningBannerTitle: {
@@ -93,7 +92,6 @@ export const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.success,
-    borderLeftWidth: 4,
     padding: spacing.lg,
     gap: spacing.sm,
   },

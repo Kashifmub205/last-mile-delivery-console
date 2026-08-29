@@ -4,6 +4,7 @@ import {
   listOutboxDeliveries,
   selectNextEligibleDelivery,
 } from '@/domain/outbox/outboxDelivery';
+import { retryFailedDeliveryAndRequestSync } from '@/features/outbox/manualRetry';
 import { useOutboxStore } from '@/features/outbox/store/outboxStore';
 import {
   isSyncPassInProgress,
@@ -153,6 +154,14 @@ export function OutboxScreen() {
     void requestSyncPass();
   };
 
+  const handleRetry = (clientDeliveryId: string) => {
+    retryFailedDeliveryAndRequestSync(
+      clientDeliveryId,
+      retryFailedDelivery,
+      requestSyncPass,
+    );
+  };
+
   const handleSetMockMode = (mode: MockDeliveryControlMode) => {
     if (mode === '400') {
       setMockDeliveryControls({
@@ -231,7 +240,7 @@ export function OutboxScreen() {
             <DeliveryCard
               key={delivery.clientDeliveryId}
               delivery={delivery}
-              onRetry={retryFailedDelivery}
+              onRetry={handleRetry}
             />
           ))}
         </View>

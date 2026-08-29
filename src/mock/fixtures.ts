@@ -7,7 +7,9 @@ import { parsePodTemplate, parseRoute } from './parse';
 function loadFixture<T>(
   label: string,
   value: unknown,
-  parser: (input: unknown) => { ok: true; value: T } | { ok: false; error: string },
+  parser: (
+    input: unknown,
+  ) => { ok: true; value: T } | { ok: false; error: string },
 ): T {
   const result = parser(value);
   if (!result.ok) {
@@ -41,6 +43,5 @@ export const POD_TEMPLATE_FIXTURE_BY_ID: Record<
     POD_TEMPLATE_FIXTURES.residential,
   [POD_TEMPLATE_FIXTURES.commercial.templateId]:
     POD_TEMPLATE_FIXTURES.commercial,
-  [POD_TEMPLATE_FIXTURES.exception.templateId]:
-    POD_TEMPLATE_FIXTURES.exception,
+  [POD_TEMPLATE_FIXTURES.exception.templateId]: POD_TEMPLATE_FIXTURES.exception,
 };

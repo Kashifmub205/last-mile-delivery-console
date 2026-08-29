@@ -69,7 +69,9 @@ export const useRouteProgressStore = create<RouteProgressState>()(
   ),
 );
 
-export async function bootstrapRouteProgress(stops: RouteStop[]): Promise<void> {
+export async function bootstrapRouteProgress(
+  stops: RouteStop[],
+): Promise<void> {
   if (bootstrapStarted) {
     return;
   }
