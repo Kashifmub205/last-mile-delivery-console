@@ -15,7 +15,7 @@ No production backend: Axios talks to an in-process mock adapter backed by JSON 
 - Android Studio / JDK / emulator or device — [RN environment setup](https://reactnative.dev/docs/set-up-your-environment)
 - nvm recommended on macOS/Linux so `scripts/with-nvm.sh` can apply `.nvmrc`
 
-iOS is not required and was not verified for this assessment.
+Platform: Android (required assessment target).
 
 ## Installation
 
@@ -167,7 +167,6 @@ Persisted across process death: route progress, outbox (including retry metadata
 
 ## Known limitations
 
-- Android only verified; iOS not exercised
 - No map (out of assessment scope)
 - Mock server is in-process; accepted deliveries and failure controls reset when the JS process dies
 - Sync after local completion waits for a trigger (periodic / connectivity / foreground / Sync now), not an immediate enqueue-time request

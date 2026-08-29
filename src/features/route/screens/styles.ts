@@ -7,6 +7,15 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.background,
     paddingHorizontal: spacing.lg,
   },
+  bootState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  bootSubtitle: {
+    ...typography.bodySecondary,
+    marginTop: spacing.sm,
+  },
   title: {
     ...typography.title,
     marginBottom: spacing.sm,

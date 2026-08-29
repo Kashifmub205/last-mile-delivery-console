@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   Text,
@@ -46,6 +47,7 @@ import { useRouteProgressStore } from '@/features/route/store/routeProgressStore
 import type { RootStackParamList } from '@/navigation/types';
 import type { Route, RouteStop, StopStatus } from '@/types/route';
 import type { ZoneState } from '@/types/zone';
+import { colors } from '@/theme';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Route'>;
@@ -323,8 +325,9 @@ export function RouteScreen() {
 
   if (isRouteLoading || !hasHydrated || !zoneHasHydrated) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <Text style={styles.subtitle}>Loading route…</Text>
+      <View style={[styles.container, styles.bootState]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.bootSubtitle}>Loading route…</Text>
       </View>
     );
   }
@@ -438,15 +441,6 @@ export function RouteScreen() {
               <Text style={styles.zoneValue}>
                 {formatCoordinate(zone?.lastAcceptedFix ?? null)}
               </Text>
-            </ZoneInfoRow>
-            <ZoneInfoRow label="POD">
-              <StatusChip
-                label={canOpenPod ? 'Available' : 'Arrive required'}
-                boxStyle={canOpenPod ? styles.chipSuccess : styles.chipNeutral}
-                textStyle={
-                  canOpenPod ? styles.chipTextSuccess : styles.chipTextNeutral
-                }
-              />
             </ZoneInfoRow>
           </View>
 

@@ -1,4 +1,4 @@
-import { NavigationContainer } from '@react-navigation/native';
+import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { OutboxScreen } from '@/features/outbox/screens';
 import { ProofOfDeliveryScreen } from '@/features/pod/screens';
@@ -7,6 +7,15 @@ import type { RootStackParamList } from '@/navigation/types';
 import { colors } from '@/theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const navigationTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: colors.background,
+    card: colors.background,
+  },
+};
 
 const childScreenOptions = {
   headerShown: true,
@@ -21,15 +30,21 @@ const childScreenOptions = {
   },
   headerShadowVisible: false,
   headerBackTitleVisible: false,
+  contentStyle: {
+    backgroundColor: colors.background,
+  },
 } as const;
 
 export function RootNavigator() {
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
         initialRouteName="Route"
         screenOptions={{
           headerShown: false,
+          contentStyle: {
+            backgroundColor: colors.background,
+          },
         }}
       >
         <Stack.Screen name="Route" component={RouteScreen} />
