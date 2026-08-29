@@ -1,5 +1,5 @@
 export type RootStackParamList = {
-  Route: undefined;
+  Route: { deliverySavedLocally?: boolean } | undefined;
   ProofOfDelivery: { stopId: string; templateId: string };
   Outbox: undefined;
 };

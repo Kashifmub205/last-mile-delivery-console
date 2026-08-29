@@ -126,7 +126,7 @@ export function ProofOfDeliveryScreen({ route }: Props) {
       return;
     }
 
-    navigation.navigate('Route');
+    navigation.navigate('Route', { deliverySavedLocally: true });
   }, [answers, navigation, routeData, stopId, template]);
 
   if (isLoading) {

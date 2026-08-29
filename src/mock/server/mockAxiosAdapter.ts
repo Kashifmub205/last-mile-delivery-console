@@ -7,7 +7,10 @@ import type {
 import { IDEMPOTENCY_KEY_HEADER } from '@/constants/api';
 import { getPodTemplate } from './getPodTemplate';
 import { getRoute } from './getRoute';
-import { resolveDeliveryFailureInjection } from './mockDeliveryControls';
+import {
+  resolveDeliveryFailureInjection,
+  waitForConfiguredMockLatency,
+} from './mockDeliveryControls';
 import { postRouteDelivery } from './postRouteDelivery';
 
 function parseRequestBody(data: unknown): unknown {
@@ -118,6 +121,8 @@ function matchGetPodTemplate(url: string): { templateId: string } | null {
 }
 
 export const mockAxiosAdapter: AxiosAdapter = async config => {
+  await waitForConfiguredMockLatency();
+
   const method = (config.method ?? 'get').toLowerCase();
   const url = config.url ?? '';
 

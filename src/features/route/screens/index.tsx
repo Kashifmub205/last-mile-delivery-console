@@ -7,7 +7,8 @@ import {
   View,
 } from 'react-native';
 import NetInfo, { type NetInfoState } from '@react-native-community/netinfo';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getRoute } from '@/api/deliveryApi';
@@ -34,6 +35,12 @@ import {
   simulateReturnInsideSequence,
 } from '@/features/location/devLocationSimulator';
 import { useOutboxStore } from '@/features/outbox/store/outboxStore';
+import {
+  LOCAL_SAVE_FEEDBACK_BODY,
+  LOCAL_SAVE_FEEDBACK_DISMISS_MS,
+  LOCAL_SAVE_FEEDBACK_TITLE,
+  shouldShowLocalSaveFeedback,
+} from '@/features/route/localSaveFeedback';
 import { useActiveStopZoneStore } from '@/features/route/store/activeStopZoneStore';
 import { useRouteProgressStore } from '@/features/route/store/routeProgressStore';
 import type { RootStackParamList } from '@/navigation/types';
@@ -42,6 +49,7 @@ import type { ZoneState } from '@/types/zone';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Route'>;
+type ScreenRouteProp = RouteProp<RootStackParamList, 'Route'>;
 
 const stopChipBox: Record<StopStatus, object> = {
   PENDING: styles.chipNeutral,
@@ -213,6 +221,7 @@ function StopRow({
 export function RouteScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
+  const routeNav = useRoute<ScreenRouteProp>();
   const hasHydrated = useRouteProgressStore(state => state.hasHydrated);
   const activeStopId = useRouteProgressStore(state => state.activeStopId);
   const completedStopIds = useRouteProgressStore(
@@ -225,6 +234,7 @@ export function RouteScreen() {
   const [isRouteLoading, setIsRouteLoading] = useState(true);
   const [arriveError, setArriveError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState<boolean | null>(null);
+  const [showLocalSaveFeedback, setShowLocalSaveFeedback] = useState(false);
   const [permissionStatus, setPermissionStatus] =
     useState<LocationPermissionStatus>(getDeviceLocationPermissionStatus());
   const outboxDeliveries = useOutboxStore(state => state.deliveries);
@@ -233,6 +243,29 @@ export function RouteScreen() {
       outboxDeliveries.filter(delivery => delivery.state !== 'SYNCED').length,
     [outboxDeliveries],
   );
+
+  useEffect(() => {
+    if (!shouldShowLocalSaveFeedback(routeNav.params)) {
+      return;
+    }
+
+    setShowLocalSaveFeedback(true);
+    navigation.setParams({ deliverySavedLocally: undefined });
+  }, [navigation, routeNav.params]);
+
+  useEffect(() => {
+    if (!showLocalSaveFeedback) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setShowLocalSaveFeedback(false);
+    }, LOCAL_SAVE_FEEDBACK_DISMISS_MS);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [showLocalSaveFeedback]);
 
   useEffect(() => {
     let cancelled = false;
@@ -345,6 +378,27 @@ export function RouteScreen() {
           }
         />
       </View>
+
+      {showLocalSaveFeedback ? (
+        <View style={styles.successBanner}>
+          <View style={styles.successBannerHeader}>
+            <Text style={styles.successBannerTitle}>
+              {LOCAL_SAVE_FEEDBACK_TITLE}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Dismiss local save message"
+              onPress={() => setShowLocalSaveFeedback(false)}
+              hitSlop={8}
+            >
+              <Text style={styles.successBannerDismiss}>Dismiss</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.successBannerBody}>
+            {LOCAL_SAVE_FEEDBACK_BODY}
+          </Text>
+        </View>
+      ) : null}
 
       {zone?.zoneState === 'DEPARTED_EARLY' ? (
         <View style={styles.warningBanner}>

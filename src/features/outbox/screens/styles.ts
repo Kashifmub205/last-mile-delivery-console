@@ -153,7 +153,22 @@ export const styles = StyleSheet.create({
   devPanelTitle: {
     ...typography.section,
   },
+  devPanelSubtitle: {
+    ...typography.body,
+    fontWeight: '600',
+    marginTop: spacing.sm,
+  },
   devPanelHint: typography.caption,
+  devLatencyRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  devLatencyButton: {
+    flexGrow: 1,
+    minHeight: 40,
+    paddingVertical: spacing.sm,
+  },
   button: {
     borderRadius: radii.md,
     paddingVertical: spacing.md,

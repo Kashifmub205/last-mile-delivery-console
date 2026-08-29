@@ -12,7 +12,9 @@ import {
 } from '@/features/outbox/sync/syncCoordinator';
 import {
   getMockDeliveryControls,
+  MOCK_API_LATENCY_OPTIONS,
   setMockDeliveryControls,
+  type MockApiLatencyMs,
   type MockDeliveryControlMode,
 } from '@/mock/server/mockDeliveryControls';
 import type { OutboxDelivery, OutboxState } from '@/types/outbox';
@@ -34,6 +36,12 @@ const MOCK_MODE_LABELS: Record<MockDeliveryControlMode, string> = {
   '400': '400 fail',
   '500': '500 fail',
   fail_first_n: 'Fail first 3',
+};
+
+const MOCK_LATENCY_LABELS: Record<MockApiLatencyMs, string> = {
+  0: 'No delay (0ms)',
+  500: '500ms',
+  1500: '1500ms',
 };
 
 const stateChipBox: Record<OutboxState, object> = {
@@ -121,7 +129,9 @@ function DeliveryCard({
 
 export function OutboxScreen() {
   const [passInProgress, setPassInProgress] = useState(isSyncPassInProgress);
-  const [mockMode, setMockMode] = useState(getMockDeliveryControls().mode);
+  const initialControls = getMockDeliveryControls();
+  const [mockMode, setMockMode] = useState(initialControls.mode);
+  const [mockLatencyMs, setMockLatencyMs] = useState(initialControls.latencyMs);
 
   useEffect(() => subscribeSyncPassInProgress(setPassInProgress), []);
   const hasHydrated = useOutboxStore(state => state.hasHydrated);
@@ -165,6 +175,11 @@ export function OutboxScreen() {
     }
 
     setMockMode(mode);
+  };
+
+  const handleSetMockLatency = (latencyMs: MockApiLatencyMs) => {
+    setMockDeliveryControls({ latencyMs });
+    setMockLatencyMs(latencyMs);
   };
 
   return (
@@ -247,6 +262,33 @@ export function OutboxScreen() {
             </Pressable>
           ),
         )}
+
+        <Text style={styles.devPanelSubtitle}>
+          Mock latency (testing behavior)
+        </Text>
+        <Text style={styles.devPanelHint}>
+          Deterministic Axios mock delay applied to GET and POST.
+        </Text>
+        <View style={styles.devLatencyRow}>
+          {MOCK_API_LATENCY_OPTIONS.map(latencyMs => (
+            <Pressable
+              key={latencyMs}
+              accessibilityRole="button"
+              onPress={() => handleSetMockLatency(latencyMs)}
+              style={({ pressed }) => [
+                styles.button,
+                styles.buttonSecondary,
+                styles.devLatencyButton,
+                mockLatencyMs === latencyMs && styles.buttonSelected,
+                pressed && styles.buttonPressed,
+              ]}
+            >
+              <Text style={styles.buttonSecondaryText}>
+                {MOCK_LATENCY_LABELS[latencyMs]}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
     </ScrollView>
   );

@@ -5,10 +5,17 @@ export type MockDeliveryControlMode =
   | '500'
   | 'fail_first_n';
 
+export type MockApiLatencyMs = 0 | 500 | 1500;
+
+export const MOCK_API_LATENCY_OPTIONS = [
+  0, 500, 1500,
+] as const satisfies readonly MockApiLatencyMs[];
+
 export type MockDeliveryControls = {
   mode: MockDeliveryControlMode;
   message: string;
   failFirstN: number;
+  latencyMs: MockApiLatencyMs;
 };
 
 export type MockDeliveryFailureInjection =
@@ -18,11 +25,14 @@ export type MockDeliveryFailureInjection =
 
 const DEFAULT_MESSAGE = 'Mock delivery failure';
 
-let controls: MockDeliveryControls = {
+const DEFAULT_CONTROLS: MockDeliveryControls = {
   mode: 'none',
   message: DEFAULT_MESSAGE,
   failFirstN: 3,
+  latencyMs: 0,
 };
+
+let controls: MockDeliveryControls = { ...DEFAULT_CONTROLS };
 
 const attemptCountByIdempotencyKey = new Map<string, number>();
 
@@ -45,8 +55,26 @@ export function setMockDeliveryControls(
   return getMockDeliveryControls();
 }
 
+export function resetMockDeliveryControls(): MockDeliveryControls {
+  controls = { ...DEFAULT_CONTROLS };
+  attemptCountByIdempotencyKey.clear();
+  return getMockDeliveryControls();
+}
+
 export function resetMockDeliveryAttemptCounts(): void {
   attemptCountByIdempotencyKey.clear();
+}
+
+export async function waitForConfiguredMockLatency(): Promise<void> {
+  const ms = controls.latencyMs;
+
+  if (ms <= 0) {
+    return;
+  }
+
+  await new Promise<void>(resolve => {
+    setTimeout(resolve, ms);
+  });
 }
 
 function incrementAttemptCount(idempotencyKey: string): number {

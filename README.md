@@ -1,154 +1,180 @@
 # Last-Mile Delivery Console
 
-Offline-first React Native assessment app for a courier working a route of stops. Three screens: **Route**, **Proof of Delivery**, and **Outbox**.
+Offline-first React Native (CLI, 0.82.x, TypeScript) courier console. Android is the primary supported platform.
 
-## Prerequisites
+**Route** — ordered stops, geofence-gated Arrive, early-departure banner, offline/unsynced indicators.  
+**Proof of Delivery** — registry-driven forms from mock templates; completion is local-first.  
+**Outbox** — persisted queue with background sync, retry/backoff, and reviewer mock controls.
 
-- **Node 20** (recommended). See [Node version](#node-version) below.
-- **Yarn**
-- **Android Studio** + JDK — [React Native environment setup](https://reactnative.dev/docs/set-up-your-environment)
-- Physical Android device or emulator with USB debugging enabled
+No production backend: Axios talks to an in-process mock adapter backed by JSON fixtures.
 
-iOS is not required for this assessment.
+## Requirements
 
-## Run on Android
+- **Node 20** (`.nvmrc`; `package.json` engines: `>=20 <22`)
+- **Yarn** (`yarn.lock`)
+- Android Studio / JDK / emulator or device — [RN environment setup](https://reactnative.dev/docs/set-up-your-environment)
+- nvm recommended on macOS/Linux so `scripts/with-nvm.sh` can apply `.nvmrc`
 
-Terminal 1 — Metro:
+iOS is not required and was not verified for this assessment.
+
+## Installation
 
 ```bash
+nvm use          # or rely on yarn start / yarn android (they use with-nvm.sh)
 yarn install
-yarn start
 ```
 
-Terminal 2 — install debug build on device/emulator:
+`postinstall` runs `patch-package`, a Metro Node 21 compatibility patch, and packager setup. Prefer Node 20; Node 22+ is untested.
+
+## Running Android
 
 ```bash
-yarn android
+yarn start       # Metro (Terminal 1)
+yarn android     # debug build (Terminal 2)
 ```
 
-If multiple devices are connected, target one explicitly:
+Both scripts go through `scripts/with-nvm.sh`. Target a device with `yarn android --deviceId=<id>` (`adb devices`).
+
+Other scripts: `yarn test`, `yarn lint`, `yarn clean`, `yarn release`.
+
+## Running Tests
 
 ```bash
-yarn android --deviceId=<device-id>
+yarn test
+npx tsc --noEmit   # no dedicated script; TypeScript is a project dependency
 ```
 
-List devices:
-
-```bash
-adb devices
-```
-
-### Other scripts
-
-```bash
-yarn clean    # clear Android build cache
-yarn release  # assemble release APK (android/app/build/outputs/apk/release/)
-yarn test     # Jest
-yarn lint     # ESLint
-```
-
-## Node version
-
-This project targets **React Native 0.82** with **Node 20**.
-
-- `.nvmrc` pins Node 20. If you use nvm: `nvm use` before starting Metro.
-- `package.json` engines: `>=20 <22`
-- `yarn start` and `yarn android` run through `scripts/with-nvm.sh` to apply `.nvmrc` automatically on macOS/Linux with nvm installed.
-- After `yarn install`, a postinstall step patches Metro for **Node 21** compatibility (`scripts/patch-metro-node21.sh`) and fixes the auto-packager launcher (`scripts/setup-packager.sh`).
-
-If Metro fails with a `styleText` / `format` error, switch to Node 20:
-
-```bash
-nvm use 20
-yarn start
-```
-
-Node 22+ is untested.
-
-## Tech stack
-
-| Concern | Choice |
-|---------|--------|
-| Navigation | React Navigation Native Stack |
-| State | Zustand (planned) |
-| Persistence | MMKV (`src/storage/`) |
-| Connectivity | NetInfo (planned) |
-| Location | react-native-geolocation-service (planned) |
-| API | Axios + local mock service (planned) |
-| Forms | Custom registry-driven renderer (planned) |
-| IDs | react-native-uuid (planned) |
-
-No Redux, React Query, Formik, geofencing libraries, maps, or UI kits.
+Coverage is pure domain / API-boundary Jest suites: point-in-polygon and noise filtering, zone state machine, POD visibility/validation/sanitization, local completion, outbox sync coordinator, and mock API / idempotency behavior.
 
 ## Architecture
 
 ```
-src/
-├── api/              HTTP client boundary
-├── constants/        App, sync, geofence tuning
-├── domain/           Pure business logic (geofence, sync, pod rules)
-├── features/         Screens: route, pod, outbox, location (dev tools)
-├── mock/             Route JSON, POD templates, fake server (planned)
-├── navigation/       Typed stack navigator
-├── storage/          MMKV wrapper + JSON helpers
-├── types/            Route, outbox, zone, POD domain types
-└── theme.ts          Assessment palette, spacing, typography
+Route / POD UI
+    → API layer (src/api)
+    → Axios client + in-process mock adapter
+    → JSON fixtures (src/mock/data)
+
+POD complete
+    → MMKV-backed outbox + route progress
+    → route advances immediately
+    → sync coordinator (connectivity / foreground / periodic / Sync now)
+    → POST mock deliveries
 ```
 
-**Boundary rule:** screens render state and dispatch intent; domain/services own behavior. Geofence, sync, and form rules must be testable without mounting React.
+| Area            | Role                                                        |
+| --------------- | ----------------------------------------------------------- |
+| `src/features/` | Screens, stores, location/sync wiring                       |
+| `src/domain/`   | Pure geofence, POD, outbox, sync rules                      |
+| `src/api/`      | Typed HTTP boundary                                         |
+| `src/mock/`     | Fixtures, parse/narrow, Axios adapter, dev failure controls |
+| `src/storage/`  | MMKV helpers                                                |
+| `src/types/`    | Shared domain types                                         |
 
-## Persistence (MMKV)
+Zustand + MMKV persist route progress, active-stop zone state, and the outbox. `AppProviders` bootstraps hydration, device GPS, and `initOutboxSync` so sync does not depend on the Outbox screen being mounted.
 
-Route progress, active stop zone state (`AT_STOP` / `DEPARTED_EARLY`), and the full outbox (including retry metadata and stable idempotency keys) will be persisted in MMKV via `src/storage/`.
+Business logic stays outside React so geofence, forms, and sync can be unit-tested without mounting screens.
 
-On startup, persisted state is recovered before it is treated as authoritative. Items left in `SYNCING` after a force-quit are eligible for a safe retry with the same idempotency key.
+## Mock API
 
-Storage keys live in `src/storage/keys.ts`.
+In-process Axios adapter (`src/mock/server/mockAxiosAdapter.ts`). No real network or backend.
 
-## Mock API (planned)
+| Endpoint                      | Purpose                                     |
+| ----------------------------- | ------------------------------------------- |
+| `GET /route`                  | Route + stops + drop-zone polygons          |
+| `GET /pod-templates/:id`      | POD template                                |
+| `POST /routes/:id/deliveries` | Accept delivery; requires `Idempotency-Key` |
 
-No production backend. The app will call a local mock implementing:
+Duplicate accepted key → **409** with original `deliveryId`. Client treats that as successful sync (`duplicate: true`).
 
-| Endpoint | Purpose |
-|----------|---------|
-| `GET /route` | Route document with stops and drop zones |
-| `GET /pod-templates/:id` | Proof-of-delivery template |
-| `POST /routes/:id/deliveries` | Submit delivery; honors `Idempotency-Key` (`409` = already accepted) |
+**Outbox screen controls** (intentional for reviewers):
 
-Dev controls for latency and forced failures will be documented here once implemented.
+| Mode         | Behavior                                                           |
+| ------------ | ------------------------------------------------------------------ |
+| Normal       | Accept deliveries                                                  |
+| Network fail | Transport-style failure                                            |
+| 400 fail     | Terminal 4xx                                                       |
+| 500 fail     | Retryable 5xx                                                      |
+| Fail first 3 | 500 for the first three attempts per idempotency key, then success |
 
-## Current status
+Latency: **0ms / 500ms / 1500ms**. Controls and accepted-delivery memory are process-lifetime (in-memory).
 
-**Done**
+## Geofence and location
 
-- React Native CLI + TypeScript project
-- Navigation shell (Route / POD / Outbox placeholders)
-- Domain types in `src/types/`
-- MMKV storage wrapper in `src/storage/`
-- Theme tokens aligned with the assessment brief
-- Android debug build verified
+Real Android GPS via `react-native-geolocation-service`. No geofencing library.
 
-**Not yet implemented**
+- Custom point-in-polygon: even-odd ray casting; boundary points count as inside; concave polygons supported
+- Fixes **&lt; 10m** from the last accepted fix are ignored
+- **Two consecutive** evaluated observations confirm INSIDE or OUTSIDE
+- Arrive requires confirmed INSIDE
+- After arrival, confirmed OUTSIDE → `DEPARTED_EARLY` (timestamp persisted); confirmed INSIDE return → `AT_STOP` and clear departure
+- Zone state persists across restart
 
-- Zustand stores wired to persistence
-- Offline outbox + sync manager (sequential, backoff, idempotency)
-- Geofence state machine + point-in-polygon
-- GPS noise filtering + dev location simulator
-- Dynamic POD form registry
-- Mock API + seed data
-- Full screen UI and README sections for sync algorithm, geofence strategy, and trade-offs
+### Dev location simulator (Route screen)
 
-These will be added incrementally with matching commits.
+Injected coordinates are driver GPS relative to the **active stop** polygon and use the **same** pipeline as real GPS.
 
-## Trade-offs (so far)
+| Control                         | Purpose                                       |
+| ------------------------------- | --------------------------------------------- |
+| Inject inside / outside         | First observation on that side                |
+| Inject confirming fix           | Second spaced fix to confirm the pending side |
+| Inject jitter (&lt;10m)         | Noise that should be ignored                  |
+| Simulate depart / return inside | Outside→confirm or inside→confirm sequences   |
 
-- **MMKV over AsyncStorage** — synchronous reads on startup for outbox/zone recovery without async hydration races.
-- **Zustand over Redux** — shared state across route/outbox/sync without boilerplate for a small three-screen app.
-- **Custom sync engine** — assessment evaluates retry classification, ordering, and idempotency directly.
-- **Node 20 pin + Metro patch** — RN 0.82 Metro is unreliable on Node 21; patch keeps reviewers on Node 21 unblocked after `yarn install`.
+Repeating the same inject without a confirming fix often does nothing: the second fix must be ≥10m from the last accepted fix.
+
+## Dynamic POD forms
+
+Templates from the mock API. Registry maps field type → renderer (`TEXT`, `TEXTAREA`, `DROPDOWN`, `CHECKBOX`, `DATETIME`). Adding a type is a registry entry, not screen branches.
+
+- `visibleWhen` — hidden fields skip validation and payload
+- Required validation on visible supported fields only
+- Unknown/malformed fields become `UNSUPPORTED` placeholders and are omitted from submit
+- `tpl-exception` includes an intentional `SIGNATURE` field for unsupported-type behavior
+
+## Offline-first completion and outbox
+
+Completing POD **does not wait for the server**:
+
+1. Validate visible fields → sanitize answers
+2. Stable `clientDeliveryId` (idempotency key)
+3. Persist outbox record → advance route locally → tear down stop geofence
+4. Return to Route with **“Delivery saved locally”** / **“It will sync automatically when a connection is available.”**
+
+Outbox states: `QUEUED` → `SYNCING` → `RETRYING` | `FAILED` | `SYNCED`.
+
+**Triggers:** connectivity restored, app foreground, periodic (~15s), Outbox **Sync now**. Enqueue alone does **not** start an immediate sync pass; online items usually wait for the next trigger or Sync now.
+
+**Rules:** one pass at a time; oldest eligible first; `FAILED` does not block later items; network/5xx retryable; ordinary 4xx terminal; 409-already-accepted → `SYNCED`; `retryCount` + exponential backoff (1s base); auto-retry stops after **5** failures; manual **Retry** resets the cycle; idempotency key never regenerates; stale `SYNCING` after restart → `QUEUED`.
+
+Persisted across process death: route progress, outbox (including retry metadata), zone state, departure timestamp. Startup rehydrates stores, recovers stale `SYNCING`, and reconciles progress with the outbox.
+
+## Reviewer scenarios
+
+1. **Arrive** — Inject inside → Inject confirming fix → Arrive
+2. **Early departure** — Arrive → Simulate depart → `DEPARTED_EARLY` banner/timer → Simulate return inside
+3. **Offline** — Airplane mode / disable network → complete POD → stop advances, unsynced count rises
+4. **Retry** — Outbox: 500 or Fail first 3 → Sync now → `RETRYING` / retry count / backoff
+5. **Terminal then recover** — stay on 500 until retry 5 → `FAILED` → Normal → Retry → `SYNCED`
+
+## Engineering choices
+
+- Local-first so the driver workflow never blocks on network
+- Custom geofence (assessment forbids a geofence library)
+- MMKV for synchronous recovery; Zustand for small shared state
+- Axios + mock adapter to keep a production-like API boundary without a backend
+- Dev mock/GPS controls exposed on purpose for deterministic review
+- Android-first scope
+
+## Known limitations
+
+- Android only verified; iOS not exercised
+- No map (out of assessment scope)
+- Mock server is in-process; accepted deliveries and failure controls reset when the JS process dies
+- Sync after local completion waits for a trigger (periodic / connectivity / foreground / Sync now), not an immediate enqueue-time request
 
 ## With another day
 
-- Domain unit tests for geofence, sync, and form sanitization
-- Full README walkthrough of offline scenario and simulated GPS
-- Release signing docs for APK distribution
+- Device/E2E automation for geofence + offline paths
+- Broader outbox/retry integration tests
+- Real API base URL / environment wiring
+- Accessibility and polish pass
