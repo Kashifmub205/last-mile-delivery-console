@@ -20,7 +20,7 @@ export function FieldShell({
     <View style={fieldStyles.field}>
       <Text style={fieldStyles.label}>
         {label}
-        {isRequired ? ' *' : ''}
+        {isRequired ? <Text style={fieldStyles.requiredMark}> *</Text> : null}
       </Text>
       {children}
       {error ? <Text style={fieldStyles.error}>{error}</Text> : null}

@@ -10,7 +10,12 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const childScreenOptions = {
   headerShown: true,
-  headerTintColor: colors.primary,
+  headerTitleAlign: 'center',
+  headerTintColor: colors.text,
+  headerTitleStyle: {
+    color: colors.text,
+    fontWeight: '600',
+  },
   headerStyle: {
     backgroundColor: colors.background,
   },

@@ -5,6 +5,8 @@ import type {
   InternalAxiosRequestConfig,
 } from 'axios';
 import { IDEMPOTENCY_KEY_HEADER } from '@/constants/api';
+import { getPodTemplate } from './getPodTemplate';
+import { getRoute } from './getRoute';
 import { resolveDeliveryFailureInjection } from './mockDeliveryControls';
 import { postRouteDelivery } from './postRouteDelivery';
 
@@ -49,24 +51,43 @@ function readHeader(
   return undefined;
 }
 
+function buildResponseStatusText(status: number): string {
+  if (status === 201) {
+    return 'Created';
+  }
+
+  if (status === 200) {
+    return 'OK';
+  }
+
+  if (status === 404) {
+    return 'Not Found';
+  }
+
+  if (status === 409) {
+    return 'Conflict';
+  }
+
+  if (status >= 500) {
+    return 'Internal Server Error';
+  }
+
+  if (status >= 400) {
+    return 'Bad Request';
+  }
+
+  return 'OK';
+}
+
 function buildResponse<T>(
   config: InternalAxiosRequestConfig,
   status: number,
   data: T,
 ): AxiosResponse<T> {
-  const statusText =
-    status === 409
-      ? 'Conflict'
-      : status >= 500
-      ? 'Internal Server Error'
-      : status >= 400
-      ? 'Bad Request'
-      : 'Created';
-
   return {
     data,
     status,
-    statusText,
+    statusText: buildResponseStatusText(status),
     headers: {},
     config,
   };
@@ -82,9 +103,37 @@ function matchPostRouteDelivery(url: string): { routeId: string } | null {
   return { routeId: match[1] };
 }
 
+function matchGetRoute(url: string): boolean {
+  return /^\/route\/?$/.test(url);
+}
+
+function matchGetPodTemplate(url: string): { templateId: string } | null {
+  const match = url.match(/^\/pod-templates\/([^/]+)\/?$/);
+
+  if (!match?.[1]) {
+    return null;
+  }
+
+  return { templateId: decodeURIComponent(match[1]) };
+}
+
 export const mockAxiosAdapter: AxiosAdapter = async config => {
   const method = (config.method ?? 'get').toLowerCase();
   const url = config.url ?? '';
+
+  if (method === 'get') {
+    if (matchGetRoute(url)) {
+      const result = getRoute();
+      return buildResponse(config, result.status, result.data);
+    }
+
+    const templateMatch = matchGetPodTemplate(url);
+
+    if (templateMatch) {
+      const result = getPodTemplate(templateMatch.templateId);
+      return buildResponse(config, result.status, result.data);
+    }
+  }
 
   if (method === 'post') {
     const routeMatch = matchPostRouteDelivery(url);

@@ -1,9 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getPodTemplate, getRoute } from '@/api/deliveryApi';
 import { resolveCompletionLocation } from '@/domain/location/completionLocation';
 import { getLatestAcceptedFixForStop } from '@/features/location/activeStopLocation';
 import { sanitizePodAnswers } from '@/domain/pod/sanitizeAnswers';
@@ -12,9 +13,9 @@ import { validatePodForm } from '@/domain/pod/validation';
 import { isFieldVisible } from '@/domain/pod/visibility';
 import { completeLocalDelivery } from '@/features/pod/completeLocalDelivery';
 import { PodFieldRenderer } from '@/features/pod/components/PodFieldRenderer';
-import { POD_TEMPLATE_FIXTURE_BY_ID, ROUTE_FIXTURE } from '@/mock/fixtures';
 import type { RootStackParamList } from '@/navigation/types';
-import type { PodAnswerValue } from '@/types/pod';
+import type { PodAnswerValue, PodTemplate } from '@/types/pod';
+import type { Route } from '@/types/route';
 import { styles } from './styles';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProofOfDelivery'>;
@@ -23,15 +24,57 @@ type NavigationProp = NativeStackNavigationProp<
   'ProofOfDelivery'
 >;
 
-const routeStops = ROUTE_FIXTURE.stops;
-
 export function ProofOfDeliveryScreen({ route }: Props) {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { stopId, templateId } = route.params;
-  const template = POD_TEMPLATE_FIXTURE_BY_ID[templateId];
+  const [template, setTemplate] = useState<PodTemplate | null>(null);
+  const [routeData, setRouteData] = useState<Route | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [answers, setAnswers] = useState<PodAnswers>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const hasFieldErrors = Object.keys(fieldErrors).length > 0;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      const [templateResult, routeResult] = await Promise.all([
+        getPodTemplate(templateId),
+        getRoute(),
+      ]);
+
+      if (cancelled) {
+        return;
+      }
+
+      if (!templateResult.ok) {
+        setTemplate(null);
+        setRouteData(null);
+        setLoadError(templateResult.error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      if (!routeResult.ok) {
+        setTemplate(null);
+        setRouteData(null);
+        setLoadError(routeResult.error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      setTemplate(templateResult.data);
+      setRouteData(routeResult.data);
+      setLoadError(null);
+      setIsLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [templateId]);
 
   const updateAnswer = useCallback((fieldId: string, value: PodAnswerValue) => {
     setAnswers(current => ({
@@ -50,7 +93,7 @@ export function ProofOfDeliveryScreen({ route }: Props) {
   }, []);
 
   const handleCompleteDelivery = useCallback(() => {
-    if (!template) {
+    if (!template || !routeData) {
       return;
     }
 
@@ -61,14 +104,14 @@ export function ProofOfDeliveryScreen({ route }: Props) {
       return;
     }
 
-    const stop = routeStops.find(routeStop => routeStop.id === stopId);
+    const stop = routeData.stops.find(routeStop => routeStop.id === stopId);
     if (!stop) {
       return;
     }
 
     const sanitized = sanitizePodAnswers(template, answers);
-    const result = completeLocalDelivery(routeStops, {
-      routeId: ROUTE_FIXTURE.routeId,
+    const result = completeLocalDelivery(routeData.stops, {
+      routeId: routeData.routeId,
       stopId,
       templateId: template.templateId,
       completedAt: new Date().toISOString(),
@@ -84,13 +127,23 @@ export function ProofOfDeliveryScreen({ route }: Props) {
     }
 
     navigation.navigate('Route');
-  }, [answers, navigation, stopId, template]);
+  }, [answers, navigation, routeData, stopId, template]);
 
-  if (!template) {
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <Text style={styles.subtitle}>Loading proof of delivery…</Text>
+      </View>
+    );
+  }
+
+  if (loadError || !template || !routeData) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <Text style={styles.title}>Proof of Delivery</Text>
-        <Text style={styles.subtitle}>Template not found: {templateId}</Text>
+        <Text style={styles.subtitle}>
+          {loadError ?? `Template not found: ${templateId}`}
+        </Text>
       </View>
     );
   }
@@ -125,6 +178,11 @@ export function ProofOfDeliveryScreen({ route }: Props) {
         </View>
 
         <View style={styles.actions}>
+          {hasFieldErrors ? (
+            <Text style={styles.formError}>
+              Fix the highlighted fields to complete delivery.
+            </Text>
+          ) : null}
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [

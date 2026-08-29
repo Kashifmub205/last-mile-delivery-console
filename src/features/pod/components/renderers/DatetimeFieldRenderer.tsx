@@ -1,8 +1,9 @@
 import { TextInput } from 'react-native';
 
+import type { PodFieldRendererProps } from '../../types';
+import { colors } from '@/theme';
 import { FieldShell } from '../FieldShell';
 import { fieldStyles } from '../fieldStyles';
-import type { PodFieldRendererProps } from '../../types';
 
 export function DatetimeFieldRenderer({
   field,
@@ -20,6 +21,7 @@ export function DatetimeFieldRenderer({
         value={textValue}
         onChangeText={onChange}
         placeholder="YYYY-MM-DDTHH:mm:ss"
+        placeholderTextColor={colors.textMuted}
         autoCapitalize="none"
         autoCorrect={false}
       />

@@ -3,12 +3,15 @@ import { colors, radii, spacing, typography } from '@/theme';
 
 export const fieldStyles = StyleSheet.create({
   field: {
-    marginBottom: spacing.lg,
+    gap: spacing.sm,
   },
   label: {
     ...typography.body,
     fontWeight: '600',
-    marginBottom: spacing.sm,
+  },
+  requiredMark: {
+    color: colors.error,
+    fontWeight: '600',
   },
   input: {
     ...typography.body,
@@ -17,11 +20,13 @@ export const fieldStyles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radii.sm,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
+    minHeight: 44,
     color: colors.text,
   },
   inputError: {
     borderColor: colors.error,
+    backgroundColor: colors.errorSoft,
   },
   textArea: {
     minHeight: 96,
@@ -38,6 +43,8 @@ export const fieldStyles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+    minHeight: 44,
+    justifyContent: 'center',
     backgroundColor: colors.surface,
   },
   optionSelected: {
@@ -52,15 +59,18 @@ export const fieldStyles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
+  checkboxList: {
+    gap: spacing.sm,
+  },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
+    gap: spacing.md,
+    minHeight: 44,
   },
   checkboxBox: {
-    width: 22,
-    height: 22,
+    width: 24,
+    height: 24,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 4,
@@ -84,13 +94,15 @@ export const fieldStyles = StyleSheet.create({
   error: {
     ...typography.caption,
     color: colors.error,
-    marginTop: spacing.sm,
   },
   unsupported: {
     ...typography.caption,
     color: colors.textMuted,
-    backgroundColor: colors.borderSoft,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
     borderRadius: radii.sm,
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.surface,
   },
 });

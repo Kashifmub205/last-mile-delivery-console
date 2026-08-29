@@ -13,31 +13,32 @@ export const styles = StyleSheet.create({
   },
   subtitle: {
     ...typography.bodySecondary,
-    marginBottom: spacing.lg,
   },
   scrollContent: {
     paddingBottom: spacing.xxl,
   },
   form: {
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
+    gap: spacing.lg,
   },
   actions: {
-    marginTop: spacing.lg,
-    gap: spacing.md,
+    marginTop: spacing.xxl,
+    gap: spacing.sm,
+  },
+  formError: {
+    ...typography.caption,
+    color: colors.error,
   },
   button: {
     borderRadius: radii.md,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
   },
   buttonPrimary: {
     backgroundColor: colors.primary,
-  },
-  buttonSecondary: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   buttonPressed: {
     opacity: 0.85,
@@ -46,10 +47,5 @@ export const styles = StyleSheet.create({
     ...typography.body,
     fontWeight: '600',
     color: colors.white,
-  },
-  buttonSecondaryText: {
-    ...typography.body,
-    fontWeight: '600',
-    color: colors.text,
   },
 });

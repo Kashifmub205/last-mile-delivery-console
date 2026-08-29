@@ -1,7 +1,13 @@
 import axios from 'axios';
+import type {
+  ApiResult,
+  GetPodTemplateResponse,
+  GetRouteResponse,
+  PostDeliveryResponse,
+} from '@/api/types';
 import { IDEMPOTENCY_KEY_HEADER } from '@/constants/api';
 import { classifyDeliveryFailureStatus } from '@/domain/sync/classifyDeliveryFailure';
-import type { PostDeliveryResponse } from '@/api/types';
+import { parsePodTemplate, parseRoute } from '@/mock/parse';
 import type { PodSubmission } from '@/types/pod';
 import { axiosClient } from './axiosClient';
 
@@ -53,6 +59,104 @@ function resolve409Result(data: unknown): PostDeliveryResult {
     status: 409,
     retryable: false,
   };
+}
+
+function toApiFailure(
+  status: number,
+  data: unknown,
+  fallback: string,
+): ApiResult<never> {
+  return {
+    ok: false,
+    status,
+    error: {
+      message: readErrorMessage(data, fallback),
+    },
+  };
+}
+
+export async function getRoute(): Promise<ApiResult<GetRouteResponse>> {
+  try {
+    const response = await axiosClient.get<unknown>('/route');
+
+    if (!isSuccessStatus(response.status)) {
+      return toApiFailure(
+        response.status,
+        response.data,
+        `Request failed with status ${response.status}`,
+      );
+    }
+
+    const parsed = parseRoute(response.data);
+
+    if (!parsed.ok) {
+      return {
+        ok: false,
+        status: response.status,
+        error: { message: parsed.error },
+      };
+    }
+
+    return { ok: true, data: parsed.value };
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      return toApiFailure(
+        error.response.status,
+        error.response.data,
+        error.message,
+      );
+    }
+
+    return {
+      ok: false,
+      status: 0,
+      error: { message: 'Network request failed' },
+    };
+  }
+}
+
+export async function getPodTemplate(
+  templateId: string,
+): Promise<ApiResult<GetPodTemplateResponse>> {
+  try {
+    const response = await axiosClient.get<unknown>(
+      `/pod-templates/${encodeURIComponent(templateId)}`,
+    );
+
+    if (!isSuccessStatus(response.status)) {
+      return toApiFailure(
+        response.status,
+        response.data,
+        `Request failed with status ${response.status}`,
+      );
+    }
+
+    const parsed = parsePodTemplate(response.data);
+
+    if (!parsed.ok) {
+      return {
+        ok: false,
+        status: response.status,
+        error: { message: parsed.error },
+      };
+    }
+
+    return { ok: true, data: parsed.value };
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      return toApiFailure(
+        error.response.status,
+        error.response.data,
+        error.message,
+      );
+    }
+
+    return {
+      ok: false,
+      status: 0,
+      error: { message: 'Network request failed' },
+    };
+  }
 }
 
 export async function postRouteDelivery(

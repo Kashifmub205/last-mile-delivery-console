@@ -18,40 +18,42 @@ export function CheckboxFieldRenderer({
 
   return (
     <FieldShell label={field.label} isRequired={field.isRequired} error={error}>
-      {field.type === 'CHECKBOX'
-        ? field.options.map(option => {
-            const isSelected = selectedValues.includes(option);
+      <View style={fieldStyles.checkboxList}>
+        {field.type === 'CHECKBOX'
+          ? field.options.map(option => {
+              const isSelected = selectedValues.includes(option);
 
-            return (
-              <Pressable
-                key={option}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: isSelected }}
-                style={fieldStyles.checkboxRow}
-                onPress={() => {
-                  if (isSelected) {
-                    onChange(selectedValues.filter(item => item !== option));
-                    return;
-                  }
+              return (
+                <Pressable
+                  key={option}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: isSelected }}
+                  style={fieldStyles.checkboxRow}
+                  onPress={() => {
+                    if (isSelected) {
+                      onChange(selectedValues.filter(item => item !== option));
+                      return;
+                    }
 
-                  onChange([...selectedValues, option]);
-                }}
-              >
-                <View
-                  style={[
-                    fieldStyles.checkboxBox,
-                    isSelected ? fieldStyles.checkboxBoxSelected : null,
-                  ]}
+                    onChange([...selectedValues, option]);
+                  }}
                 >
-                  {isSelected ? (
-                    <Text style={fieldStyles.checkboxMark}>✓</Text>
-                  ) : null}
-                </View>
-                <Text style={fieldStyles.checkboxLabel}>{option}</Text>
-              </Pressable>
-            );
-          })
-        : null}
+                  <View
+                    style={[
+                      fieldStyles.checkboxBox,
+                      isSelected ? fieldStyles.checkboxBoxSelected : null,
+                    ]}
+                  >
+                    {isSelected ? (
+                      <Text style={fieldStyles.checkboxMark}>✓</Text>
+                    ) : null}
+                  </View>
+                  <Text style={fieldStyles.checkboxLabel}>{option}</Text>
+                </Pressable>
+              );
+            })
+          : null}
+      </View>
     </FieldShell>
   );
 }
