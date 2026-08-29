@@ -10,21 +10,21 @@ No production backend: Axios talks to an in-process mock adapter backed by JSON 
 
 ## Requirements
 
-- **Node 20** (`.nvmrc`; `package.json` engines: `>=20 <22`)
+- **Node 20** preferred (`.nvmrc`); **Node 21** also works (`package.json` engines: `>=20 <22`)
 - **Yarn** (`yarn.lock`)
 - Android Studio / JDK / emulator or device — [RN environment setup](https://reactnative.dev/docs/set-up-your-environment)
-- nvm recommended on macOS/Linux so `scripts/with-nvm.sh` can apply `.nvmrc`
+
+nvm is optional. If installed with Node 20, `yarn start` / `yarn android` switch to it automatically; otherwise they use whatever Node is on your `PATH`.
 
 Platform: Android (required assessment target).
 
 ## Installation
 
 ```bash
-nvm use          # or rely on yarn start / yarn android (they use with-nvm.sh)
 yarn install
 ```
 
-`postinstall` runs `patch-package`, a Metro Node 21 compatibility patch, and packager setup. Prefer Node 20; Node 22+ is untested.
+`postinstall` runs `patch-package`, a Metro Node 21 compatibility patch, and packager setup. Node 22+ is untested.
 
 ## Running Android
 
@@ -33,7 +33,7 @@ yarn start       # Metro (Terminal 1)
 yarn android     # debug build (Terminal 2)
 ```
 
-Both scripts go through `scripts/with-nvm.sh`. Target a device with `yarn android --deviceId=<id>` (`adb devices`).
+Target a device with `yarn android --deviceId=<id>` (`adb devices`).
 
 Other scripts: `yarn test`, `yarn lint`, `yarn clean`, `yarn release`.
 
